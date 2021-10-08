@@ -51,7 +51,9 @@ def create_progression(progression, key):
         elif(chord == "IV"):
             root = tonic + 5
         elif(chord == "V"):
-            root = tonic + 7
+            root = tonic - 5
+        elif(chord == "VI"):
+            root = tonic - 4
         elif(chord == "vi"):
             root = tonic - 3
         elif(chord == "bVII"):
