@@ -1,4 +1,4 @@
-from Agent import create_progression, create_melody, create_song, random_chord_progression
+from Agent import create_progression, create_melody, create_song, generate_scale, random_chord_progression
 from Environment import output_to_midi
 
 def main():
@@ -10,6 +10,8 @@ def main():
     print("How would you like to begin? (choose #)")
     print("1. From existing chord progression\n2. Input chord progression\n3. Random chord progression\n4. Quit")
     song_choice = int(input())
+
+    is_major = -1 # Variable determines whether or not progression is in a major or minor key, will have an effect on the scale choice in the melody function
 
     if(song_choice == 1):
         print("Select a chord progression from the list below:")
@@ -46,9 +48,18 @@ def main():
         elif(progression_choice == 9):
             progression = ["I", "IV", "I", "I", "IV", "IV", "I", "I", "V", "IV", "I", "V"]
         elif(progression_choice == 10):
-            progression = ["I", "V", "vi", "iii", "IV", "I", "IV", "V"]
+            progression = ["I", "V", "vi", "iii", "IV", "I", "IV", "V"]            
         elif(progression_choice == 11):
             exit()
+
+
+        # Determines the quality of the scale to use based on the progression
+        if(progression_choice < 7 or progression_choice > 8):
+            is_major = 1
+        elif(progression_choice == 7 or progression_choice == 8):
+            is_major = 0
+
+
 
         print("Enter the key (eg. A, C#, etc.,) or 'q' to quit:")
         key_choice = input()
@@ -63,7 +74,9 @@ def main():
         print("How many times should the progression be looped?")
         loops = int(input())
 
-        melody = create_melody(progression, loops)
+        scale = generate_scale(key_choice.lower(), is_major)
+
+        melody = create_melody(progression, scale, loops)
 
         #print("Enter BPM:")
         #bpm = int(input())
@@ -78,7 +91,11 @@ def main():
         chord = input()
         keepGoing = 1
         while(keepGoing == 1):
-            if(chord.lower() == "q"):
+            if(chord == "I"):
+                is_major = 1
+            elif(chord == "i"):
+                is_major = 0
+            elif(chord.lower() == "q"):
                 exit()
             elif(chord.lower() == "x"):
                 keepGoing = 0
@@ -100,7 +117,9 @@ def main():
         print("How many times should the progression be looped?")
         loops = int(input())
 
-        melody = create_melody(progression, loops)
+        scale = generate_scale(key_choice.lower(), is_major)
+
+        melody = create_melody(progression, scale, loops)
 
         mid = create_song(progression, melody, loops)
 
@@ -110,22 +129,43 @@ def main():
     elif(song_choice == 3):
         print("How many measures for the progression?")
         measures = int(input())
-        progression = random_chord_progression(measures)
 
-        print("Enter the key (eg. A, C#, etc.,) or 'q' to quit:")
-        key_choice = input()
+        waiting_for_quality = 1
+        while(waiting_for_quality == 1):
+            print("Should the progression be in a major or minor key?")
+            quality_choice = input()
+            
+            if(quality_choice == "major"):
+                is_major = 1
+                waiting_for_quality = 0
+            elif(quality_choice == "minor"):
+                is_major = 0
+                waiting_for_quality = 0
+            else:
+                print("Quality not recognized, please enter \"major\" or \"minor\"")
         
-        acceptable_keys = ["a", "ab", "a#", "b", "bb", "b#", "c", "cb", "c#", "d", "db", "d#", "e", "eb", "e#", "f", "fb", "f#", "g", "gb", "g#"]
+        progression = random_chord_progression(measures, is_major)
+     
 
-        if(key_choice.lower() in acceptable_keys):
-            progression = create_progression(progression, key_choice.lower())
-        else:
-            exit()
+        waiting_for_key = 1
+        while(waiting_for_key == 1):
+            print("Enter the key (eg. A, C#, etc.,) or 'q' to quit:")
+            key_choice = input()
+            
+            acceptable_keys = ["a", "ab", "a#", "b", "bb", "b#", "c", "cb", "c#", "d", "db", "d#", "e", "eb", "e#", "f", "fb", "f#", "g", "gb", "g#"]
+
+            if(key_choice.lower() in acceptable_keys):
+                progression = create_progression(progression, key_choice.lower())
+                waiting_for_key = 0
+            else:
+                print("Key center not recognized, please enter a proper key.")
 
         print("How many times should the progression be looped?")
         loops = int(input())
 
-        melody = create_melody(progression, loops)
+        scale = generate_scale(key_choice.lower(), is_major)
+
+        melody = create_melody(progression, scale, loops)
 
         mid = create_song(progression, melody, loops)
 

@@ -44,13 +44,15 @@ def create_progression(progression, key):
 
         if(chord == "I" or chord == "i"):
             root = tonic
-        elif(chord == "ii"):
+        elif(chord == "ii" or chord == "iidim"):
             root = tonic + 2
+        elif(chord == "III"):
+            root = tonic + 3
         elif(chord == "iii"):
             root = tonic + 4
-        elif(chord == "IV"):
+        elif(chord == "IV" or chord == "iv"):
             root = tonic + 5
-        elif(chord == "V"):
+        elif(chord == "V" or chord == "v"):
             root = tonic - 5
         elif(chord == "VI"):
             root = tonic - 4
@@ -58,37 +60,113 @@ def create_progression(progression, key):
             root = tonic - 3
         elif(chord == "bVII"):
             root = tonic - 2
+        elif(chord == "viidim"):
+            root = tonic - 1
             
 
-        if(chord.islower()): # If the chord is lowercase, use a minor third
+        if(chord == "iidim" or chord == "viidim"): # Rare instance in which diminished chord is used
             third = root + 3
+            fifth = root + 6
+        elif(chord.islower()): # If the chord is lowercase, use a minor third
+            third = root + 3
+            fifth = root + 7
         else:
             third = root + 4 # major third otherwise
-
-        fifth = root + 7
+            fifth = root + 7
 
         chord_progression.append((root, third, fifth))
 
     return chord_progression
 
 
+# Determines the scale to use based on user-defined parameters
+def generate_scale(key, is_major):
+
+    scale = []
+
+    tonic = 0
+
+    # Set the tonic to the desired note
+    if(key == "e" or key == "fb"):
+        tonic = 52
+    elif(key == "e#" or key == "f"):
+        tonic = 53
+    elif(key == "f#" or key == "gb"):
+        tonic = 54
+    elif(key == "g"):
+        tonic = 55
+    elif(key == "g#" or key == "ab"):
+        tonic = 56
+    elif(key == "a"):
+        tonic = 57
+    elif(key == "a#" or key == "bb"):
+        tonic = 58
+    elif(key == "b" or key == "cb"):
+        tonic = 59
+    elif(key == "c" or key == "b#"):
+        tonic = 60
+    elif(key == "c#" or key == "db"):
+        tonic = 61
+    elif(key == "d"):
+        tonic = 62
+    elif(key == "d#" or key == "eb"):
+        tonic = 63
+
+    
+    if(is_major == 0): # minor key
+        scale.append(tonic)
+        scale.append(tonic + 2)
+        scale.append(tonic + 3)
+        scale.append(tonic + 5)
+        scale.append(tonic + 7)
+        scale.append(tonic + 8)
+        scale.append(tonic + 10)
+    else: # major key
+        scale.append(tonic)
+        scale.append(tonic + 2)
+        scale.append(tonic + 4)
+        scale.append(tonic + 5)
+        scale.append(tonic + 7)
+        scale.append(tonic + 9)
+        scale.append(tonic + 11)
+
+    return scale
+
+
 # Generates a random melody based on the chord progression
-def create_melody(chord_progression, loops):
+def create_melody(chord_progression, scale, loops):
 
     # Melodies are stored as tuples, such as (note, beats).
     # Beat values can be 4, 3, 2, 1, or 0.5
-    melody = []    
+    melody = []
+
+    OCTAVE = 12 # All melodic information is 12 semitones (one octave) above the harmony    
 
     for i in range(loops):
         for chord in chord_progression:
             beats_remaining = 4
-            potential_values = [4, 3, 2, 1, 0.5]
+            potential_values = [4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5]
+            note = 0
             while (beats_remaining > 0):
                 value = random.choice(potential_values)
                 if(beats_remaining - value >= 0):
-                    note = random.choice(chord) + 12 # Melody is an octave above the harmony
+                    if(len(melody) < 2):
+                        note = random.choice(chord) + OCTAVE
+                    else:
+                        if(melody[-2][0] - melody[-1][0] <= -5):
+                            if(melody[-1][0] - 1 - OCTAVE in scale):
+                                note = melody[-1][0] - 1
+                            else:
+                                note = melody[-1][0] - 2
+                        elif(melody[-2][0] - melody[-1][0] >= 5):
+                            if(melody[-1][0] + 1 - OCTAVE in scale):
+                                note = melody[-1][0] + 1
+                            else:
+                                note = melody[-1][0] + 2
+                        else:
+                            note = random.choice(chord) + OCTAVE
                     beats_remaining = beats_remaining - value
-                    melody.append((note, value))
+                    melody.append((note, value))                                                      
     return melody
 
 
@@ -128,15 +206,21 @@ def create_song(progression, melody, loops):
         note = pair[0]
         value = 768 # arbitrary value
         if(pair[1] == 4):
-            value = 768
+            value = value
+        elif(pair[1] == 3.5):
+            value = int(value * (7/8))
         elif(pair[1] == 3):
-            value = 576 # 3/4 of 768
+            value = int(value * (3/4))
+        elif(pair[1] == 2.5):
+            value = int(value * (5/8))
         elif(pair[1] == 2):
-            value = 384
+            value = int(value / 2)
+        elif(pair[1] == 1.5):
+            value = int(value * (3/8))
         elif(pair[1] == 1):
-            value = 192
+            value = int(value / 4)
         else:
-            value = 96
+            value = int(value / 8)
 
         track2.append(Message('note_on', channel=0, note=note, velocity = 50, time=0))
         track2.append(Message('note_off', channel=0, note=note, velocity = 50, time=int(value)))
@@ -146,39 +230,89 @@ def create_song(progression, melody, loops):
     return mid
 
 
-def random_chord_progression(measures):
+def random_chord_progression(measures, is_major):
 
     progression = []
 
-    # These lists hold possible values that could follow a certain Roman Numeral
-    from1 = ["I", "ii", "iii", "IV", "V", "vi"]
-    from2 = ["V"]
-    from3 = ["IV", "vi"]
-    from4 = ["I", "ii", "V"]
-    from5 = ["I", "iii", "vi"]
-    from6 = ["ii", "IV"]
+    if(is_major == 0):
+        # These lists hold possible values that could follow a certain Roman Numeral
+        from1 = ["i", "iidim", "III", "iv", "v", "V", "VI", "bVII"]
+        from2 = ["i", "III"]
+        from3 = ["i", "iv", "VI"]
+        from4 = ["i", "v", "V"]
+        from5 = ["i", "V", "VI"]
+        from6 = ["i", "III", "v", "V", "bVII"]
+        from7 = ["i", "v", "VI"]
+        from5_2 = ["i"] # Used in rare instances
 
-    # Choose a random chord to start at
-    chord = random.choice(from1)
+        # Choose a random chord to start at
+        chord = "i"
 
-    for i in range(measures):
-        if(chord == "I"):
-            progression.append("I")
-            chord = random.choice(from1)
-        elif(chord == "ii"):
-            progression.append("ii")
-            chord = random.choice(from2)
-        elif(chord == "iii"):
-            progression.append("iii")
-            chord = random.choice(from3)
-        elif(chord == "IV"):
-            progression.append("IV")
-            chord = random.choice(from4)
-        elif(chord == "V"):
-            progression.append("V")
-            chord = random.choice(from5)
-        elif(chord == "vi"):
-            progression.append("vi")
-            chord = random.choice(from6)
+        for i in range(measures):
+            if(chord == "i"):
+                progression.append("i")
+                chord = random.choice(from1)
+            elif(chord == "iidim"):
+                progression.append("iidim")
+                chord = random.choice(from2)
+            elif(chord == "III"):
+                progression.append("III")
+                chord = random.choice(from3)
+            elif(chord == "iv"):
+                progression.append("iv")
+                chord = random.choice(from4)
+            elif(chord == "v"):
+                progression.append("v")
+                chord = random.choice(from5)
+            elif(chord == "V"):
+                progression.append("V")
+                chord = random.choice(from5_2)
+            elif(chord == "VI"):
+                progression.append("VI")
+                chord = random.choice(from6)
+            elif(chord == "bVII"):
+                progression.append("bVII")
+                chord = random.choice(from7)
+            elif(chord == "viidim"):
+                progression.append("viidim")
+                chord = random.choice(from7)
+    else:
+        # These lists hold possible values that could follow a certain Roman Numeral
+        from1 = ["I", "ii", "iii", "IV", "V", "vi", "VII", "viidim"]
+        from2 = ["V"]
+        from3 = ["IV", "vi"]
+        from4 = ["I", "ii", "V"]
+        from5 = ["I", "iii", "vi"]
+        from6 = ["ii", "IV"]
+        from7 = ["I"]
+
+        # Choose a random chord to start at
+        chord = random.choice(from1)
+
+        for i in range(measures):
+            if(chord == "I"):
+                progression.append("I")
+                chord = random.choice(from1)
+            elif(chord == "ii"):
+                progression.append("ii")
+                chord = random.choice(from2)
+            elif(chord == "iii"):
+                progression.append("iii")
+                chord = random.choice(from3)
+            elif(chord == "IV"):
+                progression.append("IV")
+                chord = random.choice(from4)
+            elif(chord == "V"):
+                progression.append("V")
+                chord = random.choice(from5)
+            elif(chord == "vi"):
+                progression.append("vi")
+                chord = random.choice(from6)
+            elif(chord == "bVII"):
+                progression.append("bVII")
+                chord = random.choice(from7)
+            elif(chord == "viidim"):
+                progression.append("viidim")
+                chord = random.choice(from7)
             
     return progression
