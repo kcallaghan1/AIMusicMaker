@@ -95,16 +95,16 @@ def main():
         chord = input()
         keepGoing = 1
         while(keepGoing == 1):
-            if(chord == "I"):
-                is_major = 1
-            elif(chord == "i"):
-                is_major = 0
-            elif(chord.lower() == "q"):
+            if(chord.lower() == "q"):
                 exit()
             elif(chord.lower() == "x"):
                 keepGoing = 0
                 break
             else:
+                if(chord == "I"):
+                    is_major = 1
+                elif(chord == "i"):
+                    is_major = 0
                 progression.append(chord)
                 chord = input()
 

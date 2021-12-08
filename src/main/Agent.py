@@ -133,6 +133,50 @@ def generate_scale(key, is_major):
     return scale
 
 
+# Creates 'hook' - or basic melody that can be repeated and modified throughout.
+def create_hook(chord_progression, scale):
+
+    hook = []
+    OCTAVE = 12
+
+    for chord in chord_progression:
+            beats_remaining = 4
+            potential_values = [4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5]
+            note = 0
+            while (beats_remaining > 0):
+                value = random.choice(potential_values)
+                if(beats_remaining - value >= 0):
+                    if(len(hook) < 2): # If the melody has just began or the underlying chord is a dominant major 5th
+                        note = random.choice(chord) + OCTAVE
+                    elif(scale[0] + 10 == scale[6] and (hook[-1][0] == scale[6] + 1 + OCTAVE or hook[-1][0] == scale[6] + 1)): # Handles leading tone in minor key
+                        note = hook[-1][0] + 1
+                    elif(scale[0] + 11 == scale[6] and (hook[-1][0] == scale[6] + OCTAVE or hook[-1][0] == scale[6])): # Handles leading tone in major key
+                        note = hook[-1][0] + 1
+                    else:
+                        if(hook[-2][0] - hook[-1][0] <= -4): # If there is a leap upwards
+                            if((((hook[-1][0] - 1 - OCTAVE) in scale) or (hook[-1][0] - 1) in scale) or (((hook[-1][0] - 1 - OCTAVE) in chord) or (hook[-1][0] - 1) in chord)):
+                                note = hook[-1][0] - 1
+                            else:
+                                note = hook[-1][0] - 2
+                        elif(hook[-2][0] - hook[-1][0] >= 4): # If there is a leap downwards
+                            if((((hook[-1][0] + 1 - OCTAVE) in scale) or (hook[-1][0] + 1) in scale) or (((hook[-1][0] + 1 - OCTAVE) in chord) or (hook[-1][0] + 1) in chord)):
+                                note = hook[-1][0] + 1
+                            else:
+                                note = hook[-1][0] + 2
+                        else:
+                            note = random.choice(chord) + OCTAVE
+                    beats_remaining = beats_remaining - value
+                    hook.append((note, value))
+    return hook
+
+
+# Adds the created hook to the melody
+def add_hook_to_melody(melody, hook):
+    for hook_element in hook:
+        melody.append(hook_element)
+
+
+
 # Generates a random melody based on the chord progression
 def create_melody(chord_progression, scale, loops):
 
@@ -140,9 +184,16 @@ def create_melody(chord_progression, scale, loops):
     # Beat values can be 4, 3, 2, 1, or 0.5
     melody = []
 
-    OCTAVE = 12 # All melodic information is 12 semitones (one octave) above the harmony    
+    OCTAVE = 12 # All melodic information is 12 semitones (one octave) above the harmony
 
-    for i in range(loops):
+    hook = create_hook(chord_progression, scale)
+
+    add_hook_to_melody(melody, hook)
+    if(loops > 4):
+        add_hook_to_melody(melody, hook)  
+
+    loops_completed = 2
+    while(loops_completed < loops - 2):
         for chord in chord_progression:
             beats_remaining = 4
             potential_values = [4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5]
@@ -152,42 +203,31 @@ def create_melody(chord_progression, scale, loops):
                 if(beats_remaining - value >= 0):
                     if(len(melody) < 2 or (chord[0] == scale[4] and chord[1] == scale[4] + 4)): # If the melody has just began or the underlying chord is a dominant major 5th
                         note = random.choice(chord) + OCTAVE
+                    elif(scale[0] + 10 == scale[6] and (melody[-1][0] == scale[6] + 1 + OCTAVE or melody[-1][0] == scale[6] + 1)): # Handles leading tone in minor key
+                        note = melody[-1][0] + 1
+                    elif(scale[0] + 11 == scale[6] and (melody[-1][0] == scale[6] + OCTAVE or melody[-1][0] == scale[6])): # Handles leading tone in major key
+                        note = melody[-1][0] + 1
                     else:
                         if(melody[-2][0] - melody[-1][0] <= -4): # If there is a leap upwards
-                            if(scale[4] == chord[0] and scale[4] + 4 == chord[1]): # If there is a major dominant 5th
-                                if(melody[-1][0] - OCTAVE in chord):
-                                    note = melody[-1][0]
-                                elif(melody[-1][0] - 1 - OCTAVE in chord):
-                                    note = melody[-1][0] - 1
-                                elif(melody[-1][0] - 2 - OCTAVE in chord):
-                                    note = melody[-1][0] - 2
-                                else:
-                                    note = melody[-1][0] - 3
+                            if((((melody[-1][0] - 1 - OCTAVE) in scale) or (melody[-1][0] - 1 in scale)) or (((melody[-1][0] - 1 - OCTAVE) in chord) or (melody[-1][0] - 1 in chord))):
+                                note = melody[-1][0] - 1
                             else:
-                                if(melody[-1][0] - 1 - OCTAVE in scale):
-                                    note = melody[-1][0] - 1
-                                else:
-                                    note = melody[-1][0] - 2
+                                note = melody[-1][0] - 2
                         elif(melody[-2][0] - melody[-1][0] >= 4): # If there is a leap downwards
-                            if(scale[4] == chord[0] and scale[4] + 4 == chord[1]): # If there is a major dominant 5th
-                                if(melody[-1][0] - OCTAVE in chord):
-                                    note = melody[-1][0]
-                                elif(melody[-1][0] + 1 - OCTAVE in chord):
-                                    note = melody[-1][0] + 1
-                                elif(melody[-1][0] + 2 - OCTAVE in chord):
-                                    note = melody[-1][0] + 2
-                                else:
-                                   note = melody[-1][0] + 3 
+                            if(((melody[-1][0] + 1 - OCTAVE) in scale) or (melody[-1][0] + 1 in scale)):
+                                note = melody[-1][0] + 1
                             else:
-                                if(melody[-1][0] + 1 - OCTAVE in scale):
-                                    note = melody[-1][0] + 1
-                                else:
-                                    note = melody[-1][0] + 2
+                                note = melody[-1][0] + 2
                         else:
                             note = random.choice(chord) + OCTAVE
                     beats_remaining = beats_remaining - value
-                    melody.append((note, value))                                                      
+                    melody.append((note, value))
+        loops_completed = loops_completed + 1
+    add_hook_to_melody(melody, hook)
+    if(loops > 4):
+        add_hook_to_melody(melody, hook)                                                      
     return melody
+
 
 
 # Combines the chord progression with the melody
