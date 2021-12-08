@@ -61,15 +61,19 @@ def main():
 
 
 
-        print("Enter the key (eg. A, C#, etc.,) or 'q' to quit:")
-        key_choice = input()
-        
-        acceptable_keys = ["a", "ab", "a#", "b", "bb", "b#", "c", "cb", "c#", "d", "db", "d#", "e", "eb", "e#", "f", "fb", "f#", "g", "gb", "g#"]
+        waiting_for_key = 1
+        while(waiting_for_key == 1):
+            print("Enter the key (eg. A, C#, etc.,) or 'q' to quit:")
+            key_choice = input()
+            
+            acceptable_keys = ["a", "ab", "a#", "b", "bb", "b#", "c", "cb", "c#", "d", "db", "d#", "e", "eb", "e#", "f", "fb", "f#", "g", "gb", "g#"]
 
-        if(key_choice.lower() in acceptable_keys):
-            progression = create_progression(progression, key_choice.lower())
-        else:
-            exit()
+            if(key_choice.lower() in acceptable_keys):
+                progression = create_progression(progression, key_choice.lower())
+                waiting_for_key = 0
+            else:
+                print("Key center not recognized, please enter a proper key.")
+
 
         print("How many times should the progression be looped?")
         loops = int(input())

@@ -150,19 +150,39 @@ def create_melody(chord_progression, scale, loops):
             while (beats_remaining > 0):
                 value = random.choice(potential_values)
                 if(beats_remaining - value >= 0):
-                    if(len(melody) < 2):
+                    if(len(melody) < 2 or (chord[0] == scale[4] and chord[1] == scale[4] + 4)): # If the melody has just began or the underlying chord is a dominant major 5th
                         note = random.choice(chord) + OCTAVE
                     else:
-                        if(melody[-2][0] - melody[-1][0] <= -5):
-                            if(melody[-1][0] - 1 - OCTAVE in scale):
-                                note = melody[-1][0] - 1
+                        if(melody[-2][0] - melody[-1][0] <= -4): # If there is a leap upwards
+                            if(scale[4] == chord[0] and scale[4] + 4 == chord[1]): # If there is a major dominant 5th
+                                if(melody[-1][0] - OCTAVE in chord):
+                                    note = melody[-1][0]
+                                elif(melody[-1][0] - 1 - OCTAVE in chord):
+                                    note = melody[-1][0] - 1
+                                elif(melody[-1][0] - 2 - OCTAVE in chord):
+                                    note = melody[-1][0] - 2
+                                else:
+                                    note = melody[-1][0] - 3
                             else:
-                                note = melody[-1][0] - 2
-                        elif(melody[-2][0] - melody[-1][0] >= 5):
-                            if(melody[-1][0] + 1 - OCTAVE in scale):
-                                note = melody[-1][0] + 1
+                                if(melody[-1][0] - 1 - OCTAVE in scale):
+                                    note = melody[-1][0] - 1
+                                else:
+                                    note = melody[-1][0] - 2
+                        elif(melody[-2][0] - melody[-1][0] >= 4): # If there is a leap downwards
+                            if(scale[4] == chord[0] and scale[4] + 4 == chord[1]): # If there is a major dominant 5th
+                                if(melody[-1][0] - OCTAVE in chord):
+                                    note = melody[-1][0]
+                                elif(melody[-1][0] + 1 - OCTAVE in chord):
+                                    note = melody[-1][0] + 1
+                                elif(melody[-1][0] + 2 - OCTAVE in chord):
+                                    note = melody[-1][0] + 2
+                                else:
+                                   note = melody[-1][0] + 3 
                             else:
-                                note = melody[-1][0] + 2
+                                if(melody[-1][0] + 1 - OCTAVE in scale):
+                                    note = melody[-1][0] + 1
+                                else:
+                                    note = melody[-1][0] + 2
                         else:
                             note = random.choice(chord) + OCTAVE
                     beats_remaining = beats_remaining - value
@@ -236,7 +256,7 @@ def random_chord_progression(measures, is_major):
 
     if(is_major == 0):
         # These lists hold possible values that could follow a certain Roman Numeral
-        from1 = ["i", "iidim", "III", "iv", "v", "V", "VI", "bVII"]
+        from1 = ["iidim", "III", "iv", "v", "V", "VI", "bVII"]
         from2 = ["i", "III"]
         from3 = ["i", "iv", "VI"]
         from4 = ["i", "v", "V"]
@@ -278,7 +298,7 @@ def random_chord_progression(measures, is_major):
                 chord = random.choice(from7)
     else:
         # These lists hold possible values that could follow a certain Roman Numeral
-        from1 = ["I", "ii", "iii", "IV", "V", "vi", "VII", "viidim"]
+        from1 = ["ii", "iii", "IV", "V", "vi", "VII", "viidim"]
         from2 = ["V"]
         from3 = ["IV", "vi"]
         from4 = ["I", "ii", "V"]
